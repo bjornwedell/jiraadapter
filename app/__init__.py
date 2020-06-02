@@ -20,7 +20,7 @@ class Handler:
         toDateString = request.match_info['toDateString']
         issues = self.jira.search_issues(f"worklogDate <= {toDateString} AND worklogDate >= {fromDateString} AND worklogAuthor  in ({user})", fields=['summary', 'worklog'])
         string = ""
-        n = 0
+        totalTimeSpent = 0
         for issue in issues:
             worklogs = filter(lambda wl: wl.author.name == user, issue.fields.worklog.worklogs)
             string += "<h1>" + issue.fields.summary + "</h1>"
@@ -33,7 +33,8 @@ class Handler:
                 if logStarted <= toDate and logStarted >= fromDate:
                     timespent += logs.timeSpentSeconds
             string += "<h3>" + str(timespent / 60 / 60) + " hours</h3>"
-
+            totalTimeSpent += timespent
+        string += f"<h2>Total hours: {totalTimeSpent / 60 / 60}</h2>"
         return web.Response(text=f"""
 <html>
     <head><title>JIRA Timetable</title></head>
