@@ -15,6 +15,16 @@ class Handler:
     def __init__(self, jira):
         self.jira = JiraAdapter(jira)
 
+    def sum_of_worklogs(self, worklogs):
+        sum_of_secs = 0
+        for log in worklogs:
+            sum_of_secs += log.timeSpentSeconds
+        return sum_of_secs / 60 / 60
+
+    def generate_worklog_structure(self, issues):
+        return list(map(lambda issue: {'summary': issue.fields.summary,
+                                       'hours_spent': self.sum_of_worklogs(issue.fields.worklog.worklogs)}, issues))
+
     async def times(self, request):
         user = request.match_info['user']
         fromDateString = request.match_info['fromDateString']
