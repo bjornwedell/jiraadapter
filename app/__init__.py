@@ -3,6 +3,7 @@ import datetime
 import os
 from aiohttp import web
 from jira import JIRA
+from .jiraadapter import JiraAdapter
 
 def totalLoggedHours(worklog):
     ret = 0
@@ -12,7 +13,7 @@ def totalLoggedHours(worklog):
 
 class Handler:
     def __init__(self, jira):
-        self.jira = jira
+        self.jira = JiraAdapter(jira)
 
     async def times(self, request):
         user = request.match_info['user']

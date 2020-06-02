@@ -6,6 +6,9 @@ RUN pip3 install aiohttp==3.5.4
 RUN pip3 install watchdog==0.9.0
 
 FROM base AS test
+
+RUN pip3 install mock==3.0.0
+
 COPY . test
 ENV PYTHONPATH "/test/"
 CMD python3 -m unittest /test/test/*.py
