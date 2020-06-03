@@ -42,7 +42,7 @@ class Handler:
                                        'hours_spent': self.sum_of_worklogs(issue.fields.worklog.worklogs, user, end_date, start_date)}, issues))
 
     def generate_page(self, structure, user, fromDateString, toDateString):
-        string = "";
+        string = ""
         totalTimeSpent = 0
         for issue in structure:
             string += f"<h1>{issue['summary']}</h1>"
