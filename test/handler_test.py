@@ -33,16 +33,19 @@ class TestGenerateWorklogStructure(TestCase):
                                        structure)
 
     def test_include_sum_of_hours(self):
+        user = "a.user"
+        start_date = "2020-01-01"
+        end_date = "2020-03-01"
         issue1 = MagicMock()
         sum = 5467
         worklogs = [MagicMock()]
         self.handler.sum_of_worklogs.return_value = sum
         issue1.fields.worklog.worklogs = worklogs
         issues = [issue1]
-        structure = self.handler.generate_worklog_structure(issues)
+        structure = self.handler.generate_worklog_structure(issues, user, start_date, end_date)
         self.assertEqual(sum,
                          structure[0]['hours_spent'])
-        self.handler.sum_of_worklogs.assert_called_with(worklogs)
+        self.handler.sum_of_worklogs.assert_called_with(worklogs, user, start_date, end_date)
 
 
 class TestSumOfWorklogs(TestCase):
