@@ -15,20 +15,25 @@ class Handler:
     def __init__(self, jira):
         self.jira = JiraAdapter(jira)
 
-    def sum_of_worklogs(self, worklogs, user=None, end_date=None):
+    def sum_of_worklogs(self, worklogs, user=None, end_date=None, start_date=None):
         sum_of_secs = 0
         try:
             end_date_time = datetime.datetime.strptime(end_date, '%Y-%m-%d')
         except TypeError as _e:
             end_date_time = datetime.datetime.now() + datetime.timedelta(days = 1)
-        #start_time = datetime.datetime.now() - datetime.timedelta(weeks=1)
+        try:
+            start_date_time = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        except TypeError as _e:
+            start_date_time = datetime.datetime.now() - datetime.timedelta(weeks=1)
         for log in worklogs:
             try:
                 started_time = datetime.datetime.strptime(log.started.split('T')[0], '%Y-%m-%d')
             except TypeError as _e:
                 started_time = None
             if log.author.name == user or not user \
-               and started_time and end_date_time and end_date_time >= started_time:
+               and started_time \
+               and end_date_time >= started_time \
+               and start_date_time <= started_time:
                 sum_of_secs += log.timeSpentSeconds
         return sum_of_secs / 60 / 60
 
