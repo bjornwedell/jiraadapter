@@ -1,3 +1,4 @@
+import datetime
 from unittest import TestCase
 from mock import MagicMock
 from app import Handler
@@ -54,10 +55,36 @@ class TestSumOfWorklogs(TestCase):
         secs2 = 2430
         worklogs = [MagicMock(), MagicMock()]
         worklogs[0].timeSpentSeconds = secs1
+        worklogs[0].started = datetime.datetime.now().strftime("%Y-%m-%dT%h:%m%s")
         worklogs[1].timeSpentSeconds = secs2
+        worklogs[1].started = datetime.datetime.now().strftime("%Y-%m-%dT%h:%m%s")
 
         self.assertEqual((secs1 + secs2) / 60 / 60, self.handler.sum_of_worklogs(worklogs))
 
-# test_should_only_include_worklogs_from_specified_user
-# test_should_only_include_worklogs_before_end_date
+    def test_should_only_include_worklogs_from_specified_user(self):
+        secs1 = 3636
+        user = 'the.user'
+        worklogs = [MagicMock(), MagicMock()]
+        worklogs[0].timeSpentSeconds = secs1
+        worklogs[0].started = datetime.datetime.now().strftime("%Y-%m-%dT%h:%m%s")
+        worklogs[0].author.name = user
+        worklogs[1].timeSpentSeconds = 34215
+        worklogs[1].started = datetime.datetime.now().strftime("%Y-%m-%dT%h:%m%s")
+        worklogs[1].author.name = "other.user"
+        self.assertEqual(secs1 / 60 / 60, self.handler.sum_of_worklogs(worklogs, user))
+
+    def test_should_only_include_worklogs_before_end_date(self):
+        secs1 = 3600
+        endDate = datetime.datetime.now()
+        startDate = endDate - datetime.timedelta(days=2)
+        startDateOutside = endDate + datetime.timedelta(days=2)
+        worklogs = [MagicMock(), MagicMock()]
+        worklogs[0].timeSpentSeconds = secs1
+        worklogs[0].started = startDate.strftime("%Y-%m-%dT%h:%m%s")
+        worklogs[1].timeSpentSeconds = 34215
+        worklogs[1].started = startDateOutside.strftime("%Y-%m-%dT%h:%m%s")
+        self.assertEqual(secs1 / 60 / 60,
+                         self.handler.sum_of_worklogs(worklogs, end_date=endDate.strftime("%Y-%m-%d")))
+
+
 # test_should_only_include_worklogs_after_start_date
