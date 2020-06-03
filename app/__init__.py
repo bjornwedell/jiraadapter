@@ -58,9 +58,15 @@ class Handler:
     """
 
     async def times(self, request):
-        user = request.match_info['user']
-        fromDateString = request.match_info['fromDateString']
-        toDateString = request.match_info['toDateString']
+        user = None
+        fromDateString = None
+        toDateString = None
+        try:
+            user = request.match_info['user']
+            fromDateString = request.match_info['fromDateString']
+            toDateString = request.match_info['toDateString']
+        except KeyError:
+            return web.Response(500)
         issues = self.jira.search_issues(f"worklogDate <= {toDateString} AND worklogDate >= {fromDateString} AND worklogAuthor  in ({user})", fields=['summary', 'worklog'])
         issues_list = self.generate_worklog_structure(issues, user, toDateString, fromDateString)
 

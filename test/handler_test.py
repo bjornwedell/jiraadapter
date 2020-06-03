@@ -1,8 +1,46 @@
 import datetime
+import asyncio
 from unittest import TestCase
-from mock import MagicMock
+from mock import MagicMock, patch
 from app import Handler
 
+def _run(coro):
+    return asyncio.get_event_loop().run_until_complete(coro)
+
+class TestTimes(TestCase):
+    def setUp(self):
+        self.handler = Handler(MagicMock())
+        self.handler.sum_of_worklogs = MagicMock()
+        self.handler.generate_worklog_structure = MagicMock()
+        self.handler.jira = MagicMock()
+        self.request = MagicMock()
+
+    @patch('app.web')
+    def test_handles_invalid_parameters(self, web_mock):
+        response = MagicMock()
+        web_mock.Response.return_value = response
+        self.request.match_info = {}
+        self.assertEqual(response, _run(self.handler.times(self.request)))
+        web_mock.Response.assert_called_with(500)
+
+    def test_uses_jira_to_search_for_issues(self):
+        _run(self.handler.times(self.request))
+        self.handler.jira.search_issues.assert_called()
+
+    def test_builds_structure_with_result_from_jira(self):
+        user = 'a.user'
+        toDateString = '2020-01-01'
+        fromDateString = '2020-02-01'
+        self.request.match_info = {'user' : user,
+                                   'toDateString':toDateString,
+                                   'fromDateString':fromDateString}
+        issues = MagicMock()
+        self.handler.jira.search_issues.return_value = issues
+        _run(self.handler.times(self.request))
+        self.handler.generate_worklog_structure.assert_called_with(issues,
+                                                                   user,
+                                                                   toDateString,
+                                                                   fromDateString)
 
 class TestGenerateWorklogStructure(TestCase):
 
