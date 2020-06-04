@@ -1,8 +1,6 @@
-def generate_page(structure, user, fromDateString, toDateString):
+def generate_page(structure, user, fromDateString, toDateString, totalTimeSpent):
     issuesHtml = '<table>'
-    totalTimeSpent = 0
     for issue in structure:
-        totalTimeSpent += issue["hours_spent"]
         issuesHtml += '<tr>'
         issuesHtml += f'<td>{issue["summary"]}</td>'
         issuesHtml += f'<td>{issue["hours_spent"]} hours</td>'

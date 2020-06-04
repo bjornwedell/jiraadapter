@@ -3,6 +3,7 @@ import asyncio
 from unittest import TestCase
 from mock import MagicMock, patch
 from app import Handler
+from app import get_total_hours
 
 def _run(coro):
     return asyncio.get_event_loop().run_until_complete(coro)
@@ -133,3 +134,16 @@ class TestSumOfWorklogs(TestCase):
                     create_worklog(datetime.datetime.now() - datetime.timedelta(days=3), 34215)]
         self.assertEqual(seconds_to_hours(secs1),
                          self.handler.sum_of_worklogs(worklogs, start_date=startDate.strftime(self.date_format)))
+
+class TestGetTotalHoursFunctions(TestCase):
+    def test_should_raise_if_none(self):
+        with self.assertRaises(ValueError):
+            self.assertEqual(0, get_total_hours(None))
+
+    def test_should_return_zero_if_no_issues(self):
+        self.assertEqual(0, get_total_hours([]))
+
+    def test_should_return_sum_of_worklog(self):
+        issues = [{'hours_spent': 2},
+                  {'hours_spent': 3}]
+        self.assertEqual(5, get_total_hours(issues))

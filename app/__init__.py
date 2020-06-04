@@ -6,11 +6,13 @@ from jira import JIRA
 from .jiraadapter import JiraAdapter
 from .html_renderer import generate_page
 
-def totalLoggedHours(worklog):
-    ret = 0
-    for entry in worklog:
-        ret += entry.timeSpent
-    return ret
+def get_total_hours(issues):
+    if issues is None:
+        raise ValueError('No issues passed')
+    result = 0
+    for issue in issues:
+        result += issue['hours_spent']
+    return result
 
 class Handler:
     def __init__(self, jira):
@@ -55,8 +57,7 @@ class Handler:
             return web.Response(500)
         issues = self.jira.search_issues(f"worklogDate <= {toDateString} AND worklogDate >= {fromDateString} AND worklogAuthor  in ({user})", fields=['summary', 'worklog'])
         issues_list = self.generate_worklog_structure(issues, user, toDateString, fromDateString)
-
-        return web.Response(text=generate_page(issues_list, user, fromDateString, toDateString),
+        return web.Response(text=generate_page(issues_list, user, fromDateString, toDateString, get_total_hours(issues_list)),
                             content_type='text/html')
 
 async def http_main(host, port):
