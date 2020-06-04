@@ -4,6 +4,7 @@ import os
 from aiohttp import web
 from jira import JIRA
 from .jiraadapter import JiraAdapter
+from .html_renderer import generate_page
 
 def totalLoggedHours(worklog):
     ret = 0
@@ -41,21 +42,6 @@ class Handler:
         return list(map(lambda issue: {'summary': issue.fields.summary,
                                        'hours_spent': self.sum_of_worklogs(issue.fields.worklog.worklogs, user, end_date, start_date)}, issues))
 
-    def generate_page(self, structure, user, fromDateString, toDateString):
-        string = ""
-        totalTimeSpent = 0
-        for issue in structure:
-            string += f"<h1>{issue['summary']}</h1>"
-            string += f"<h3>{issue['hours_spent']} hours</h3>"
-            totalTimeSpent += issue['hours_spent']
-        string += f"<h2>Total hours: {totalTimeSpent}</h2>"
-        return f"""
-<html>
-    <head><title>JIRA Timetable</title></head>
-    <h1>{user} from {fromDateString} to {toDateString}</h1>
-    {string}
-</html>
-    """
 
     async def times(self, request):
         user = None
@@ -70,7 +56,7 @@ class Handler:
         issues = self.jira.search_issues(f"worklogDate <= {toDateString} AND worklogDate >= {fromDateString} AND worklogAuthor  in ({user})", fields=['summary', 'worklog'])
         issues_list = self.generate_worklog_structure(issues, user, toDateString, fromDateString)
 
-        return web.Response(text=self.generate_page(issues_list, user, fromDateString, toDateString),
+        return web.Response(text=generate_page(issues_list, user, fromDateString, toDateString),
                             content_type='text/html')
 
 async def http_main(host, port):
