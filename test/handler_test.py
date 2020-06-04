@@ -121,8 +121,7 @@ class TestSumOfWorklogs(TestCase):
     def test_should_only_include_worklogs_before_end_date(self):
         secs1 = 3600
         endDate = datetime.datetime.now()
-        workStartedDate = endDate - datetime.timedelta(days=2)
-        worklogs = [create_worklog(workStartedDate, secs1),
+        worklogs = [create_worklog(endDate - datetime.timedelta(days=2), secs1),
                     create_worklog(endDate + datetime.timedelta(days=2), 34215)]
         self.assertEqual(seconds_to_hours(secs1),
                          self.handler.sum_of_worklogs(worklogs, end_date=endDate.strftime(self.date_format)))
@@ -130,8 +129,7 @@ class TestSumOfWorklogs(TestCase):
     def test_should_only_include_worklogs_after_start_date(self):
         secs1 = 3600
         startDate = datetime.datetime.now() - datetime.timedelta(days=2)
-        workStartedDate = datetime.datetime.now()
-        worklogs = [create_worklog(workStartedDate, secs1),
+        worklogs = [create_worklog(datetime.datetime.now(), secs1),
                     create_worklog(datetime.datetime.now() - datetime.timedelta(days=3), 34215)]
         self.assertEqual(seconds_to_hours(secs1),
                          self.handler.sum_of_worklogs(worklogs, start_date=startDate.strftime(self.date_format)))
