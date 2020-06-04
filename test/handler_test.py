@@ -85,6 +85,8 @@ class TestGenerateWorklogStructure(TestCase):
                          structure[0]['hours_spent'])
         self.handler.sum_of_worklogs.assert_called_with(worklogs, user, start_date, end_date)
 
+def seconds_to_hours(seconds):
+    return seconds / 60 / 60
 
 class TestSumOfWorklogs(TestCase):
 
@@ -102,7 +104,7 @@ class TestSumOfWorklogs(TestCase):
         worklogs[1].timeSpentSeconds = secs2
         worklogs[1].started = datetime.datetime.now().strftime(self.datetime_format)
 
-        self.assertEqual((secs1 + secs2) / 60 / 60, self.handler.sum_of_worklogs(worklogs))
+        self.assertEqual(seconds_to_hours(secs1 + secs2), self.handler.sum_of_worklogs(worklogs))
 
     def test_should_only_include_worklogs_from_specified_user(self):
         secs1 = 3636
@@ -114,7 +116,7 @@ class TestSumOfWorklogs(TestCase):
         worklogs[1].timeSpentSeconds = 34215
         worklogs[1].started = datetime.datetime.now().strftime(self.datetime_format)
         worklogs[1].author.name = "other.user"
-        self.assertEqual(secs1 / 60 / 60, self.handler.sum_of_worklogs(worklogs, user))
+        self.assertEqual(seconds_to_hours(secs1), self.handler.sum_of_worklogs(worklogs, user))
 
     def test_should_only_include_worklogs_before_end_date(self):
         secs1 = 3600
@@ -126,7 +128,7 @@ class TestSumOfWorklogs(TestCase):
         worklogs[0].started = workStartedDate.strftime(self.datetime_format)
         worklogs[1].timeSpentSeconds = 34215
         worklogs[1].started = workStartedDateOutside.strftime(self.datetime_format)
-        self.assertEqual(secs1 / 60 / 60,
+        self.assertEqual(seconds_to_hours(secs1),
                          self.handler.sum_of_worklogs(worklogs, end_date=endDate.strftime(self.date_format)))
 
     def test_should_only_include_worklogs_after_start_date(self):
@@ -139,5 +141,5 @@ class TestSumOfWorklogs(TestCase):
         worklogs[0].started = workStartedDate.strftime(self.datetime_format)
         worklogs[1].timeSpentSeconds = 34215
         worklogs[1].started = workStartedDateOutside.strftime(self.datetime_format)
-        self.assertEqual(secs1 / 60 / 60,
+        self.assertEqual(seconds_to_hours(secs1),
                          self.handler.sum_of_worklogs(worklogs, start_date=startDate.strftime(self.date_format)))
