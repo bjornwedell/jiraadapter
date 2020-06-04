@@ -88,8 +88,10 @@ class TestGenerateWorklogStructure(TestCase):
 def seconds_to_hours(seconds):
     return seconds / 60 / 60
 
-def create_worklog(start_datetime, seconds):
+def create_worklog(start_datetime, seconds, user=None):
     worklog = MagicMock()
+    if user:
+        worklog.author.name = user
     if start_datetime:
         worklog.started = start_datetime.strftime("%Y-%m-%dT%h:%m%s")
     if seconds:
@@ -104,24 +106,24 @@ class TestSumOfWorklogs(TestCase):
     def test_should_sum_worklogs_and_convert_to_hours(self):
         secs1 = 3636
         secs2 = 2430
-        worklogs = [create_worklog(datetime.datetime.now(), secs1), create_worklog(datetime.datetime.now(), secs2)]
+        worklogs = [create_worklog(datetime.datetime.now(), secs1),
+                    create_worklog(datetime.datetime.now(), secs2)]
 
         self.assertEqual(seconds_to_hours(secs1 + secs2), self.handler.sum_of_worklogs(worklogs))
 
     def test_should_only_include_worklogs_from_specified_user(self):
         secs1 = 3636
         user = 'the.user'
-        worklogs = [create_worklog(datetime.datetime.now(), secs1), create_worklog(datetime.datetime.now(), 34215)]
-        worklogs[0].author.name = user
-        worklogs[1].author.name = "other.user"
+        worklogs = [create_worklog(datetime.datetime.now(), secs1, user=user),
+                    create_worklog(datetime.datetime.now(), 34215, user='other.user')]
         self.assertEqual(seconds_to_hours(secs1), self.handler.sum_of_worklogs(worklogs, user))
 
     def test_should_only_include_worklogs_before_end_date(self):
         secs1 = 3600
         endDate = datetime.datetime.now()
         workStartedDate = endDate - datetime.timedelta(days=2)
-        workStartedDateOutside = endDate + datetime.timedelta(days=2)
-        worklogs = [create_worklog(workStartedDate, secs1), create_worklog(workStartedDateOutside, 34215)]
+        worklogs = [create_worklog(workStartedDate, secs1),
+                    create_worklog(endDate + datetime.timedelta(days=2), 34215)]
         self.assertEqual(seconds_to_hours(secs1),
                          self.handler.sum_of_worklogs(worklogs, end_date=endDate.strftime(self.date_format)))
 
@@ -129,7 +131,7 @@ class TestSumOfWorklogs(TestCase):
         secs1 = 3600
         startDate = datetime.datetime.now() - datetime.timedelta(days=2)
         workStartedDate = datetime.datetime.now()
-        workStartedDateOutside = datetime.datetime.now() - datetime.timedelta(days=3)
-        worklogs = [create_worklog(workStartedDate, secs1), create_worklog(workStartedDateOutside, 34215)]
+        worklogs = [create_worklog(workStartedDate, secs1),
+                    create_worklog(datetime.datetime.now() - datetime.timedelta(days=3), 34215)]
         self.assertEqual(seconds_to_hours(secs1),
                          self.handler.sum_of_worklogs(worklogs, start_date=startDate.strftime(self.date_format)))
