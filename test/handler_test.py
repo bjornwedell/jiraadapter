@@ -90,15 +90,17 @@ class TestSumOfWorklogs(TestCase):
 
     def setUp(self):
         self.handler = Handler(MagicMock())
+        self.datetime_format = "%Y-%m-%dT%h:%m%s"
+        self.date_format = "%Y-%m-%d"
 
     def test_should_sum_worklogs_and_convert_to_hours(self):
         secs1 = 3636
         secs2 = 2430
         worklogs = [MagicMock(), MagicMock()]
         worklogs[0].timeSpentSeconds = secs1
-        worklogs[0].started = datetime.datetime.now().strftime("%Y-%m-%dT%h:%m%s")
+        worklogs[0].started = datetime.datetime.now().strftime(self.datetime_format)
         worklogs[1].timeSpentSeconds = secs2
-        worklogs[1].started = datetime.datetime.now().strftime("%Y-%m-%dT%h:%m%s")
+        worklogs[1].started = datetime.datetime.now().strftime(self.datetime_format)
 
         self.assertEqual((secs1 + secs2) / 60 / 60, self.handler.sum_of_worklogs(worklogs))
 
@@ -107,10 +109,10 @@ class TestSumOfWorklogs(TestCase):
         user = 'the.user'
         worklogs = [MagicMock(), MagicMock()]
         worklogs[0].timeSpentSeconds = secs1
-        worklogs[0].started = datetime.datetime.now().strftime("%Y-%m-%dT%h:%m%s")
+        worklogs[0].started = datetime.datetime.now().strftime(self.datetime_format)
         worklogs[0].author.name = user
         worklogs[1].timeSpentSeconds = 34215
-        worklogs[1].started = datetime.datetime.now().strftime("%Y-%m-%dT%h:%m%s")
+        worklogs[1].started = datetime.datetime.now().strftime(self.datetime_format)
         worklogs[1].author.name = "other.user"
         self.assertEqual(secs1 / 60 / 60, self.handler.sum_of_worklogs(worklogs, user))
 
@@ -121,11 +123,11 @@ class TestSumOfWorklogs(TestCase):
         workStartedDateOutside = endDate + datetime.timedelta(days=2)
         worklogs = [MagicMock(), MagicMock()]
         worklogs[0].timeSpentSeconds = secs1
-        worklogs[0].started = workStartedDate.strftime("%Y-%m-%dT%h:%m%s")
+        worklogs[0].started = workStartedDate.strftime(self.datetime_format)
         worklogs[1].timeSpentSeconds = 34215
-        worklogs[1].started = workStartedDateOutside.strftime("%Y-%m-%dT%h:%m%s")
+        worklogs[1].started = workStartedDateOutside.strftime(self.datetime_format)
         self.assertEqual(secs1 / 60 / 60,
-                         self.handler.sum_of_worklogs(worklogs, end_date=endDate.strftime("%Y-%m-%d")))
+                         self.handler.sum_of_worklogs(worklogs, end_date=endDate.strftime(self.date_format)))
 
     def test_should_only_include_worklogs_after_start_date(self):
         secs1 = 3600
@@ -134,8 +136,8 @@ class TestSumOfWorklogs(TestCase):
         workStartedDateOutside = datetime.datetime.now() - datetime.timedelta(days=3)
         worklogs = [MagicMock(), MagicMock()]
         worklogs[0].timeSpentSeconds = secs1
-        worklogs[0].started = workStartedDate.strftime("%Y-%m-%dT%h:%m%s")
+        worklogs[0].started = workStartedDate.strftime(self.datetime_format)
         worklogs[1].timeSpentSeconds = 34215
-        worklogs[1].started = workStartedDateOutside.strftime("%Y-%m-%dT%h:%m%s")
+        worklogs[1].started = workStartedDateOutside.strftime(self.datetime_format)
         self.assertEqual(secs1 / 60 / 60,
-                         self.handler.sum_of_worklogs(worklogs, start_date=startDate.strftime("%Y-%m-%d")))
+                         self.handler.sum_of_worklogs(worklogs, start_date=startDate.strftime(self.date_format)))
