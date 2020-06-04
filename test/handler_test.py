@@ -48,6 +48,7 @@ class TestGenerateWorklogStructure(TestCase):
     def setUp(self):
         self.handler = Handler(MagicMock())
         self.handler.sum_of_worklogs = MagicMock()
+        self.handler.epic = MagicMock()
         self.handler.jira = MagicMock()
 
     def assert_issue_in_structure(self, issue, structure):
@@ -86,6 +87,15 @@ class TestGenerateWorklogStructure(TestCase):
                          structure[0]['hours_spent'])
         self.handler.sum_of_worklogs.assert_called_with(worklogs, user, start_date, end_date)
 
+    def test_include_epic(self):
+        epic_key = "EPIC-123"
+        self.handler.epic.return_value = epic_key
+        issue1 = MagicMock()
+        issues = [issue1]
+        structure = self.handler.generate_worklog_structure(issues)
+        self.assertEqual(epic_key, structure[0]['epic'])
+        self.handler.epic.assert_called_with(issue1)
+
 def seconds_to_hours(seconds):
     return seconds / 60 / 60
 
@@ -98,6 +108,7 @@ def create_worklog(start_datetime, seconds, user=None):
     if seconds:
         worklog.timeSpentSeconds = seconds
     return worklog
+
 class TestSumOfWorklogs(TestCase):
 
     def setUp(self):
@@ -147,3 +158,19 @@ class TestGetTotalHoursFunctions(TestCase):
         issues = [{'hours_spent': 2},
                   {'hours_spent': 3}]
         self.assertEqual(5, get_total_hours(issues))
+
+class TestEpic(TestCase):
+    def setUp(self):
+        self.handler = Handler(MagicMock())
+        self.issue = MagicMock()
+        self.epic_key = "EPIC-123"
+
+    def test_should_return_epic_link_for_non_epic(self):
+        self.issue.fields.issuetype = "Story"
+        self.issue.fields.customfield_10006 = self.epic_key
+        self.assertEqual(self.epic_key, self.handler.epic(self.issue))
+
+    def test_should_return_key_epic(self):
+        self.issue.fields.issuetype = "Epic"
+        self.issue.key = self.epic_key
+        self.assertEqual(self.epic_key, self.handler.epic(self.issue))

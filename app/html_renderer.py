@@ -2,6 +2,7 @@ def generate_page(structure, user, fromDateString, toDateString, totalTimeSpent)
     issuesHtml = '<table>'
     for issue in structure:
         issuesHtml += '<tr>'
+        issuesHtml += f'<td>{issue["epic"]}</td>'
         issuesHtml += f'<td>{issue["summary"]}</td>'
         issuesHtml += f'<td>{issue["hours_spent"]} hours</td>'
         issuesHtml += '</tr>'

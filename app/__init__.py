@@ -40,9 +40,15 @@ class Handler:
                 sum_of_secs += log.timeSpentSeconds
         return sum_of_secs / 60 / 60
 
+    def epic(self, issue):
+        if str(issue.fields.issuetype) == 'Epic':
+            return issue.key
+        return issue.fields.customfield_10006
+
     def generate_worklog_structure(self, issues, user=None, end_date=None, start_date=None):
         return list(map(lambda issue: {'summary': issue.fields.summary,
-                                       'hours_spent': self.sum_of_worklogs(issue.fields.worklog.worklogs, user, end_date, start_date)}, issues))
+                                       'hours_spent': self.sum_of_worklogs(issue.fields.worklog.worklogs, user, end_date, start_date),
+                                       'epic': self.epic(issue)}, issues))
 
 
     async def times(self, request):
@@ -55,7 +61,7 @@ class Handler:
             toDateString = request.match_info['toDateString']
         except KeyError:
             return web.Response(500)
-        issues = self.jira.search_issues(f"worklogDate <= {toDateString} AND worklogDate >= {fromDateString} AND worklogAuthor  in ({user})", fields=['summary', 'worklog'])
+        issues = self.jira.search_issues(f"worklogDate <= {toDateString} AND worklogDate >= {fromDateString} AND worklogAuthor  in ({user})", fields=['summary', 'worklog','customfield_10006','issuetype'])
         issues_list = self.generate_worklog_structure(issues, user, toDateString, fromDateString)
         return web.Response(text=generate_page(issues_list, user, fromDateString, toDateString, get_total_hours(issues_list)),
                             content_type='text/html')
