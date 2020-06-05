@@ -22,7 +22,7 @@ class TestTimes(TestCase):
         web_mock.Response.return_value = response
         self.request.match_info = {}
         self.assertEqual(response, _run(self.handler.times(self.request)))
-        web_mock.Response.assert_called_with(500)
+        web_mock.Response.assert_called_with(status=500)
 
     def test_uses_jira_to_search_for_issues(self):
         _run(self.handler.times(self.request))

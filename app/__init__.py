@@ -56,14 +56,17 @@ class Handler:
 
     async def times(self, request):
         user = None
-        fromDateString = None
-        toDateString = None
+        fromDateString = (datetime.datetime.now() - datetime.timedelta(weeks=1)).strftime("%Y-%m-%d")
+        toDateString = datetime.datetime.now().strftime("%Y-%m-%d")
         try:
             user = request.match_info['user']
+        except KeyError:
+            return web.Response(status=500)
+        try:
             fromDateString = request.match_info['fromDateString']
             toDateString = request.match_info['toDateString']
         except KeyError:
-            return web.Response(500)
+            pass
         issues = self.jira.search_issues(f"worklogDate <= {toDateString} AND worklogDate >= {fromDateString} AND worklogAuthor  in ({','.join(user.split('+'))})", fields=['summary', 'worklog','customfield_10006','issuetype'])
         issues_list = self.generate_worklog_structure(issues, user, toDateString, fromDateString)
         return web.Response(text=generate_page(issues_list, user, fromDateString, toDateString, get_total_hours(issues_list)),
@@ -83,6 +86,16 @@ async def http_main(host, port):
 
     app.add_routes([
         web.get('/times/{user}/{fromDateString}/{toDateString}',
+                handler.times),
+        web.get('/times/{user}/{fromDateString}/{toDateString}/',
+                handler.times),
+        web.get('/times/{user}/{fromDateString}',
+                handler.times),
+        web.get('/times/{user}/{fromDateString}/',
+                handler.times),
+        web.get('/times/{user}',
+                handler.times),
+        web.get('/times/{user}/',
                 handler.times)
     ])
     runner = web.AppRunner(app)
