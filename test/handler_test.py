@@ -130,6 +130,16 @@ class TestSumOfWorklogs(TestCase):
                     create_worklog(datetime.datetime.now(), 34215, user='other.user')]
         self.assertEqual(seconds_to_hours(secs1), self.handler.sum_of_worklogs(worklogs, user))
 
+    def test_should_only_include_worklogs_from_specified_multiple_users(self):
+        secs1 = 3636
+        user1 = 'the.user1'
+        secs2 = 3030
+        user2 = 'the.user2'
+        worklogs = [create_worklog(datetime.datetime.now(), secs1, user=user1),
+                    create_worklog(datetime.datetime.now(), secs2, user=user2),
+                    create_worklog(datetime.datetime.now(), 34215, user='other.user')]
+        self.assertEqual(seconds_to_hours(secs1 + secs2), self.handler.sum_of_worklogs(worklogs, f"{user1}+{user2}"))
+
     def test_should_only_include_worklogs_before_end_date(self):
         secs1 = 3600
         endDate = datetime.datetime.now()

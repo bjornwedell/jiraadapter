@@ -19,6 +19,9 @@ class Handler:
         self.jira = JiraAdapter(jira)
 
     def sum_of_worklogs(self, worklogs, user=None, end_date=None, start_date=None):
+        users = []
+        if user:
+            users = user.split('+')
         sum_of_secs = 0
         try:
             end_date_time = datetime.datetime.strptime(end_date, '%Y-%m-%d')
@@ -33,7 +36,7 @@ class Handler:
                 started_time = datetime.datetime.strptime(log.started.split('T')[0], '%Y-%m-%d')
             except TypeError as _e:
                 started_time = None
-            if log.author.name == user or not user \
+            if log.author.name in users or len(users) == 0 \
                and started_time \
                and end_date_time >= started_time \
                and start_date_time <= started_time:
@@ -61,7 +64,7 @@ class Handler:
             toDateString = request.match_info['toDateString']
         except KeyError:
             return web.Response(500)
-        issues = self.jira.search_issues(f"worklogDate <= {toDateString} AND worklogDate >= {fromDateString} AND worklogAuthor  in ({user})", fields=['summary', 'worklog','customfield_10006','issuetype'])
+        issues = self.jira.search_issues(f"worklogDate <= {toDateString} AND worklogDate >= {fromDateString} AND worklogAuthor  in ({','.join(user.split('+'))})", fields=['summary', 'worklog','customfield_10006','issuetype'])
         issues_list = self.generate_worklog_structure(issues, user, toDateString, fromDateString)
         return web.Response(text=generate_page(issues_list, user, fromDateString, toDateString, get_total_hours(issues_list)),
                             content_type='text/html')
