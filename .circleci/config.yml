@@ -5,12 +5,15 @@ orbs:
   # Declare a dependency on the welcome-orb
   welcome: circleci/docker@1.2.1
 # Orchestrate or schedule a set of jobs
+jobs:
+  test:
+    steps:
+      - checkout
+      - run: make test
+
 workflows:
   # Name the workflow "welcome"
   welcome:
     # Run the welcome/run job in its own container
     jobs:
-      test:
-        steps:
-          - checkout
-          - run: make test
+      - test
