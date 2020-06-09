@@ -172,6 +172,14 @@ class TestSumOfWorklogs(TestCase):
         self.assertEqual(seconds_to_hours(secs1),
                          self.handler.sum_of_worklogs(worklogs, start_date=startDate.strftime(self.date_format)))
 
+    def test_should_not_include_worklogs_from_specified_user_if_outside_date_spec(self):
+        secs1 = 3636
+        user = 'the.user'
+        startDate = datetime.datetime.now() - datetime.timedelta(days=2)
+        worklogs = [create_worklog(datetime.datetime.now(), secs1, user=user),
+                    create_worklog(datetime.datetime.now() - datetime.timedelta(days=3), 34215, user=user)]
+        self.assertEqual(seconds_to_hours(secs1), self.handler.sum_of_worklogs(worklogs, user, start_date=startDate.strftime(self.date_format)))
+
 class TestGetTotalHoursFunctions(TestCase):
     def test_should_raise_if_none(self):
         with self.assertRaises(ValueError):

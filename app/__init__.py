@@ -36,7 +36,7 @@ class Handler:
                 started_time = datetime.datetime.strptime(log.started.split('T')[0], '%Y-%m-%d')
             except TypeError as _e:
                 started_time = None
-            if log.author.name in users or len(users) == 0 \
+            if (log.author.name in users or len(users) == 0) \
                and started_time \
                and end_date_time >= started_time \
                and start_date_time <= started_time:
