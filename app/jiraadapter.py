@@ -7,4 +7,7 @@ class JiraAdapter:
         self.jira = jira
 
     def search_issues(self, jql_string, fields, startAt, maxResults):
-        return self.jira.search_issues(jql_string, fields=fields, startAt=startAt, maxResults=maxResults)
+        results = self.jira.search_issues(jql_string, fields=fields, startAt=startAt, maxResults=maxResults)
+        for issue in results:
+            issue.fields.worklog.worklogs = self.jira.worklogs(issue.id)
+        return results
