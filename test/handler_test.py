@@ -1,7 +1,7 @@
 import datetime
 import asyncio
 from unittest import TestCase
-from mock import MagicMock, patch
+from mock import MagicMock, patch, ANY, call
 from app import Handler
 from app import get_total_hours
 
@@ -28,6 +28,22 @@ class TestTimes(TestCase):
         _run(self.handler.times(self.request))
         self.handler.jira.search_issues.assert_called()
 
+    def test_uses_jira_to_search_for_issues_with_paging(self):
+        self.handler.jira.search_issues.side_effect = [ [MagicMock()] ]
+        _run(self.handler.times(self.request))
+        self.handler.jira.search_issues.assert_has_calls([
+            call(ANY, fields=ANY, startAt=0, maxResults=50)])
+
+    def test_uses_jira_to_search_for_issues_until_page_smaller_than_max(self):
+        firstPage = [MagicMock() for _ in range(50)]
+        secondPage = [MagicMock() for _ in range(24)]
+        self.handler.jira.search_issues.side_effect = [ firstPage,
+                                                        secondPage ]
+        _run(self.handler.times(self.request))
+        self.handler.jira.search_issues.assert_has_calls([
+            call(ANY, fields=ANY, startAt=0, maxResults=50),
+            call(ANY, fields=ANY, startAt=50, maxResults=50)])
+
     def test_builds_structure_with_result_from_jira(self):
         user = 'a.user'
         toDateString = '2020-01-01'
@@ -35,7 +51,7 @@ class TestTimes(TestCase):
         self.request.match_info = {'user' : user,
                                    'toDateString':toDateString,
                                    'fromDateString':fromDateString}
-        issues = MagicMock()
+        issues = [ MagicMock() ]
         self.handler.jira.search_issues.return_value = issues
         _run(self.handler.times(self.request))
         self.handler.generate_worklog_structure.assert_called_with(issues,
