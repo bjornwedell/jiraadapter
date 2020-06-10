@@ -13,15 +13,15 @@ def generate_page(structure, user, fromDateString, toDateString, totalTimeSpent)
             continue
         spentOnEpic = 0
         issuesHtml += '<hr>'
-        issuesHtml += f'<p><b>{create_link_to_issue(epic)}:</b></p>'
-        issuesHtml += '<table>'
+        issuesHtml += f'<h3>Epic {create_link_to_issue(epic)}</h3>'
+        issuesHtml += '<div class="indent"><table>'
         for issue in list(filter(lambda issue: issue['epic']==epic,structure)):
             issuesHtml += '<tr>'
             issuesHtml += f'<td>{create_link_to_issue(issue["key"])}:{issue["summary"]}</td>'
             issuesHtml += f'<td>{issue["hours_spent"]} hours</td>'
             issuesHtml += '</tr>'
             spentOnEpic += issue["hours_spent"]
-        issuesHtml += '</table>'
+        issuesHtml += '</table></div>'
         issuesHtml += f'<p><b>Total epic hours:</b> {spentOnEpic}</p>'
     issuesHtml += '<hr>'
     issuesHtml += f'<p><b>Issues outside epics:</b></p>'
@@ -35,6 +35,7 @@ def generate_page(structure, user, fromDateString, toDateString, totalTimeSpent)
     issuesHtml += f'<p><b>Total hours:</b> {totalTimeSpent}</p>'
     css = """
     body {font-family: sans-serif;}
+    .indent {margin-left: 30px;}
     """
     return f"""
 <html>
