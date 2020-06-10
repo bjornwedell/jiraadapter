@@ -51,7 +51,8 @@ class Handler:
     def generate_worklog_structure(self, issues, user=None, end_date=None, start_date=None):
         return list(map(lambda issue: {'summary': issue.fields.summary,
                                        'hours_spent': self.sum_of_worklogs(issue.fields.worklog.worklogs, user, end_date, start_date),
-                                       'epic': self.epic(issue)}, issues))
+                                       'epic': self.epic(issue),
+                                       'key': issue.key}, issues))
 
 
     async def times(self, request):

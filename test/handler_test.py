@@ -81,8 +81,7 @@ class TestGenerateWorklogStructure(TestCase):
         issue2 = MagicMock()
         summary2 = "summary2"
         issue2.fields.summary = summary2
-        issues = [issue1, issue2]
-        structure = self.handler.generate_worklog_structure(issues)
+        structure = self.handler.generate_worklog_structure([issue1, issue2])
         self.assert_issue_in_structure(issue1,
                                        structure)
         self.assert_issue_in_structure(issue2,
@@ -92,13 +91,12 @@ class TestGenerateWorklogStructure(TestCase):
         user = "a.user"
         start_date = "2020-01-01"
         end_date = "2020-03-01"
-        issue1 = MagicMock()
+        issue = MagicMock()
         sum = 5467
         worklogs = [MagicMock()]
         self.handler.sum_of_worklogs.return_value = sum
-        issue1.fields.worklog.worklogs = worklogs
-        issues = [issue1]
-        structure = self.handler.generate_worklog_structure(issues, user, start_date, end_date)
+        issue.fields.worklog.worklogs = worklogs
+        structure = self.handler.generate_worklog_structure([issue], user, start_date, end_date)
         self.assertEqual(sum,
                          structure[0]['hours_spent'])
         self.handler.sum_of_worklogs.assert_called_with(worklogs, user, start_date, end_date)
@@ -106,11 +104,16 @@ class TestGenerateWorklogStructure(TestCase):
     def test_include_epic(self):
         epic_key = "EPIC-123"
         self.handler.epic.return_value = epic_key
-        issue1 = MagicMock()
-        issues = [issue1]
-        structure = self.handler.generate_worklog_structure(issues)
+        issue = MagicMock()
+        structure = self.handler.generate_worklog_structure([issue])
         self.assertEqual(epic_key, structure[0]['epic'])
-        self.handler.epic.assert_called_with(issue1)
+        self.handler.epic.assert_called_with(issue)
+
+    def test_include_issue_key(self):
+        issue = MagicMock()
+        issue.key = 'KEY-123'
+        structure = self.handler.generate_worklog_structure([issue])
+        self.assertEqual(issue.key, structure[0]['key'])
 
 def seconds_to_hours(seconds):
     return seconds / 60 / 60
