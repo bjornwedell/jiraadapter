@@ -17,7 +17,7 @@ def generate_page(structure, user, fromDateString, toDateString, totalTimeSpent)
         issuesHtml += '<div class="indent"><table>'
         for issue in list(filter(lambda issue: issue['epic']==epic,structure)):
             issuesHtml += '<tr>'
-            issuesHtml += f'<td>{create_link_to_issue(issue["key"])}:{issue["summary"]}</td>'
+            issuesHtml += f'<td>{create_link_to_issue(issue["key"])}: {issue["summary"]}</td>'
             issuesHtml += f'<td>{issue["hours_spent"]} hours</td>'
             issuesHtml += '</tr>'
             spentOnEpic += issue["hours_spent"]
