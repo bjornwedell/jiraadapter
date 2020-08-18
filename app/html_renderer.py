@@ -24,14 +24,17 @@ def generate_page(structure, user, fromDateString, toDateString, totalTimeSpent)
         issuesHtml += '</table></div>'
         issuesHtml += f'<p><b>Total epic hours:</b> {spentOnEpic}</p>'
     issuesHtml += '<hr>'
-    issuesHtml += f'<p><b>Issues outside epics:</b></p>'
-    issuesHtml += '<table>'
-    for issue in list(filter(lambda issue: not issue['epic'],structure)):
-        issuesHtml += '<tr>'
-        issuesHtml += f'<td>{issue["summary"]}</td>'
-        issuesHtml += f'<td>{issue["hours_spent"]} hours</td>'
-        issuesHtml += '</tr>'
-    issuesHtml += '</table>'
+    issues_outside_epics = list(filter(lambda issue: not issue['epic'],structure))
+    if issues_outside_epics:
+        issuesHtml += f'<p><b>Issues outside epics:</b></p>'
+        issuesHtml += '<table>'
+        for issue in issues_outside_epics:
+            issuesHtml += '<tr>'
+            issuesHtml += f'<td>{create_link_to_issue(issue["key"])}: {issue["summary"]}</td>'
+            issuesHtml += f'<td>{issue["hours_spent"]} hours</td>'
+            issuesHtml += '</tr>'
+            issuesHtml += '</table>'
+            issuesHtml += '<hr>'
     issuesHtml += f'<p><b>Total hours:</b> {totalTimeSpent}</p>'
     css = """
     body {font-family: sans-serif;}
