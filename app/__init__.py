@@ -53,7 +53,7 @@ class Handler:
                                        'hours_spent': self.sum_of_worklogs(issue.fields.worklog.worklogs, user, end_date, start_date),
                                        'epic': self.epic(issue),
                                        'key': issue.key,
-                                       'subtasks': list(map(lambda subtask: subtask.key ,issue.fields.subtasks))}, issues))
+                                       'parent': issue.fields.customfield_12504}, issues))
 
 
     async def times(self, request):
@@ -73,7 +73,7 @@ class Handler:
         issuesLenBefore = len(issues)
         page = 0
         while True:
-            issues.extend(self.jira.search_issues(f"worklogDate <= {toDateString} AND worklogDate >= {fromDateString} AND worklogAuthor  in ({','.join(user.split('+'))})", fields=['summary', 'worklog','customfield_10006','issuetype','subtasks'], startAt=page*50, maxResults=50))
+            issues.extend(self.jira.search_issues(f"worklogDate <= {toDateString} AND worklogDate >= {fromDateString} AND worklogAuthor  in ({','.join(user.split('+'))})", fields=['summary', 'worklog','customfield_10006','issuetype','customfield_12504', 'parent'], startAt=page*50, maxResults=50))
             if len(issues) - issuesLenBefore < 50:
                 break
             issuesLenBefore = len(issues)

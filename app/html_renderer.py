@@ -7,6 +7,8 @@ def create_link_to_issue(issue_key):
 
 def hours_spent_on_issue(issue, structure):
     ret = issue["hours_spent"]
+    for sub_task in list(filter(lambda task: issue["key"]==task["parent"],structure)):
+        ret += sub_task["hours_spent"]
     return ret
 
 def generate_page(structure, user, fromDateString, toDateString, totalTimeSpent):
@@ -19,7 +21,7 @@ def generate_page(structure, user, fromDateString, toDateString, totalTimeSpent)
         issuesHtml += '<hr>'
         issuesHtml += f'<h3>Epic {create_link_to_issue(epic)}</h3>'
         issuesHtml += '<div class="indent"><table>'
-        for issue in list(filter(lambda issue: issue['epic']==epic,structure)):
+        for issue in list(filter(lambda issue: issue['epic']==epic and not issue["parent"], structure)):
             issuesHtml += '<tr>'
             issuesHtml += f'<td>{create_link_to_issue(issue["key"])}: {issue["summary"]}</td>'
             hours_spent = hours_spent_on_issue(issue, structure)
@@ -29,7 +31,7 @@ def generate_page(structure, user, fromDateString, toDateString, totalTimeSpent)
         issuesHtml += '</table></div>'
         issuesHtml += f'<p><b>Total epic hours:</b> {spentOnEpic}</p>'
     issuesHtml += '<hr>'
-    issues_outside_epics = list(filter(lambda issue: not issue['epic'],structure))
+    issues_outside_epics = list(filter(lambda issue: not issue['epic'] and not issue["parent"], structure))
     if issues_outside_epics:
         issuesHtml += f'<p><b>Issues outside epics:</b></p>'
         issuesHtml += '<table>'
