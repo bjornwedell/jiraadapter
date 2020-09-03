@@ -5,6 +5,10 @@ jira_url = os.environ.get('JIRA_URL', "no.url.given")
 def create_link_to_issue(issue_key):
     return f'<a href="{jira_url}/browse/{issue_key}">{issue_key}</a>'
 
+def hours_spent_on_issue(issue, structure):
+    ret = issue["hours_spent"]
+    return ret
+
 def generate_page(structure, user, fromDateString, toDateString, totalTimeSpent):
     epics = set(map(lambda issue: issue["epic"], structure))
     issuesHtml = ""
@@ -18,9 +22,10 @@ def generate_page(structure, user, fromDateString, toDateString, totalTimeSpent)
         for issue in list(filter(lambda issue: issue['epic']==epic,structure)):
             issuesHtml += '<tr>'
             issuesHtml += f'<td>{create_link_to_issue(issue["key"])}: {issue["summary"]}</td>'
-            issuesHtml += f'<td>{issue["hours_spent"]} hours</td>'
+            hours_spent = hours_spent_on_issue(issue, structure)
+            issuesHtml += f'<td>{hours_spent} hours</td>'
             issuesHtml += '</tr>'
-            spentOnEpic += issue["hours_spent"]
+            spentOnEpic += hours_spent
         issuesHtml += '</table></div>'
         issuesHtml += f'<p><b>Total epic hours:</b> {spentOnEpic}</p>'
     issuesHtml += '<hr>'
@@ -31,7 +36,7 @@ def generate_page(structure, user, fromDateString, toDateString, totalTimeSpent)
         for issue in issues_outside_epics:
             issuesHtml += '<tr>'
             issuesHtml += f'<td>{create_link_to_issue(issue["key"])}: {issue["summary"]}</td>'
-            issuesHtml += f'<td>{issue["hours_spent"]} hours</td>'
+            issuesHtml += f'<td>   {hours_spent_on_issue(issue, structure)} hours</td>'
             issuesHtml += '</tr>'
             issuesHtml += '</table>'
             issuesHtml += '<hr>'
