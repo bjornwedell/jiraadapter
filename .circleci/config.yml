@@ -8,11 +8,9 @@ jobs:
     executor: python/default
     steps:
       - checkout
-      - python/load-cache
-      - python/install-deps
-      - python/save-cache
+      - setup_remote_docker
       - run:
-          command: ./manage.py test
+          command: make test
           name: Test
 
 workflows:
