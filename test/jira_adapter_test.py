@@ -8,6 +8,8 @@ class TestSearch(TestCase):
     def setUp(self):
         self.jira = MagicMock()
         self.jira_adapter = JiraAdapter(self.jira)
+        self.jira_adapter.find_all_parents = MagicMock()
+        self.jira_adapter.find_all_parents.return_value = []
 
     def test_calls_real_jira(self):
         jql_string = "jql string"

@@ -12,4 +12,4 @@ stop:
 
 test:
 	@docker build --target=test -t jirahack_test .
-	@docker run -i -v $(PWD):/test -t jirahack_test
+	@docker run -i -t jirahack_test
