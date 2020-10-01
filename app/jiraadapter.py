@@ -9,6 +9,8 @@ class JiraAdapter:
     def find_all_parents(self, results, jql_string, fields, startAt, maxResults):
         # THIS CRAP IS NEEDED SINCE customfield_12504 seems broken in server
         results_with_project = self.jira.search_issues(jql_string, fields=['project'], startAt=startAt, maxResults=maxResults)
+        if not results_with_project:
+            return []
         projects = set(map(lambda i: i.fields.project.id, results_with_project))
         maxNumberOfParents = 0
         parents = []
