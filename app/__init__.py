@@ -4,14 +4,15 @@ import os
 from aiohttp import web
 from jira import JIRA
 from .jiraadapter import JiraAdapter
-from .html_renderer import generate_page
+from .html_renderer import generate_page, generate_remainings
+
 
 def get_total_hours(issues):
     if issues is None:
         raise ValueError('No issues passed')
     result = 0
     for issue in issues:
-        result += issue['hours_spent']
+        result += sum(list(issue["hours_spent"].values()))
     return result
 
 class Handler:
@@ -43,6 +44,21 @@ class Handler:
                 sum_of_secs += log.timeSpentSeconds
         return sum_of_secs / 60 / 60
 
+    def sum_of_worklogs_by_date(self, worklogs, user=None, end_date=None, start_date=None):
+        try:
+            end_date_time = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        except TypeError as _e:
+            end_date_time = datetime.datetime.now() + datetime.timedelta(days = 1)
+        try:
+            date_time = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        except TypeError as _e:
+            date_time = datetime.datetime.now() - datetime.timedelta(weeks=1)
+        ret = {}
+        while date_time <= end_date_time:
+            ret[date_time.strftime("%Y-%m-%d")] = self.sum_of_worklogs(worklogs, user, date_time.strftime("%Y-%m-%d"), date_time.strftime("%Y-%m-%d"))
+            date_time = date_time + datetime.timedelta(days = 1)
+        return ret
+
     def epic(self, issue):
         if str(issue.fields.issuetype) == 'Epic':
             return issue.key
@@ -50,7 +66,7 @@ class Handler:
 
     def generate_worklog_structure(self, issues, user=None, end_date=None, start_date=None):
         return list(map(lambda issue: {'summary': issue.fields.summary,
-                                       'hours_spent': self.sum_of_worklogs(issue.fields.worklog.worklogs, user, end_date, start_date),
+                                       'hours_spent': self.sum_of_worklogs_by_date(issue.fields.worklog.worklogs, user, end_date, start_date),
                                        'epic': self.epic(issue),
                                        'key': issue.key,
                                        'parent': issue.fields.customfield_12504}, issues))
@@ -82,6 +98,46 @@ class Handler:
         return web.Response(text=generate_page(issues_list, user, fromDateString, toDateString, get_total_hours(issues_list)),
                             content_type='text/html')
 
+    async def remaining(self, request):
+        epicsString = None
+        try:
+            epicsString = request.match_info['epics']
+        except KeyError:
+            return web.Response(status=500)
+        epics = epicsString.split('+')
+        search_results = self.jira.search_issues(f"'Epic Link' in ({','.join(epics)}) OR issuekey in ({','.join(epics)})", fields=['summary', 'worklog','customfield_10006','issuetype','customfield_12504', 'parent','issuetype','timeestimate', 'timeoriginalestimate'], startAt=0, maxResults=300)
+        epicsCollection = {}
+        for epic in epics:
+            filtered = list(filter(lambda i: i.key == epic, search_results))
+            epicIssue = filtered and filtered[0]
+
+            includedTasks = list(filter(lambda i: i.fields.customfield_10006 == epic, search_results))
+            print(f"epic: {epicIssue}, tasks: {includedTasks}", flush = True)
+            remainingWorkTasks = 0
+            doneWorkTasks = 0
+            for task in includedTasks:
+                sum_task_logs = self.sum_of_worklogs(task.fields.worklog.worklogs, start_date="1978-11-21")
+                print(f"task {task.key}: {sum_task_logs} {task.fields.worklog.worklogs}")
+                doneWorkTasks += sum_task_logs
+                if task.fields.timeestimate:
+                    remainingWorkTasks += task.fields.timeestimate / 60 / 60
+            if (epicIssue.fields.timeestimate or epicIssue.fields.timeestimate == 0):
+                remainingWorkEpic = epicIssue.fields.timeestimate / 60 / 60
+            else:
+                remainingWorkEpic = (epicIssue.fields.timeoriginalestimate or 0) / 60 / 60
+            doneWorkEpic = self.sum_of_worklogs(epicIssue.fields.worklog.worklogs)
+            print(f"tasks: {remainingWorkTasks}", flush=True)
+            print(f"epic: {remainingWorkEpic} {epicIssue.fields.timeestimate} {epicIssue.fields.timeoriginalestimate}", flush=True)
+            print(doneWorkTasks, flush=True)
+            remainingWork = remainingWorkEpic - doneWorkTasks
+            if remainingWork < remainingWorkTasks:
+                remainingWork = remainingWorkTasks
+            epicsCollection[epic] = {}
+            epicsCollection[epic]["remaining"] = remainingWork
+            epicsCollection[epic]["summary"] = epicIssue.fields.summary
+        return web.Response(text=generate_remainings(epicsCollection),
+                            content_type='text/html')
+
 async def http_main(host, port):
     app = web.Application(client_max_size=500_000_000)
     jira_url = os.environ.get('JIRA_URL', None)
@@ -106,7 +162,9 @@ async def http_main(host, port):
         web.get('/times/{user}',
                 handler.times),
         web.get('/times/{user}/',
-                handler.times)
+                handler.times),
+        web.get('/remaining/{epics}/',
+                handler.remaining)
     ])
     runner = web.AppRunner(app)
     await runner.setup()

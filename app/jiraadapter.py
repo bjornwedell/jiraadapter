@@ -29,7 +29,7 @@ class JiraAdapter:
 
     def search_issues(self, jql_string, fields, startAt, maxResults):
         results = self.jira.search_issues(jql_string, fields=fields, startAt=startAt, maxResults=maxResults)
-
+        print(f"jql:{jql_string}, results={results}", flush=True)
         parents = self.find_all_parents(results, jql_string, fields, startAt, maxResults)
         if parents:
             results += parents
